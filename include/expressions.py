@@ -69,9 +69,8 @@ class IncludeExpressionConstructor(object):
         # No need to worry about conflicting includes
         qs.query.bump_prefix(compiler.query)
 
-        table = qs.query.get_compiler(using=compiler.using).quote_name_unless_alias(qs.query.get_initial_alias())
-        # host_table = compiler.quote_name_unless_alias(compiler.query.get_initial_alias())
-        host_table, _ = compiler.query.table_alias(self.host_model._meta.db_table)
+        table = qs.query.get_compiler(connection=compiler.connection).quote_name_unless_alias(qs.query.get_initial_alias())
+        host_table = compiler.query.resolve_ref('pk').alias
 
         # # TODO be able to set limits per thing included
         # if self._include_limit:
@@ -108,7 +107,7 @@ class ManyToOneConstructor(IncludeExpressionConstructor):
         # because SQL
         kwargs = {}
         if queryset.ordered:
-            kwargs['order_by'] = next(zip(*queryset.query.get_compiler(using=compiler.using).get_order_by()))
+            kwargs['order_by'] = next(zip(*queryset.query.get_compiler(connection=compiler.connection).get_order_by()))
         queryset.query.clear_ordering(True)
 
         # many_to_one is a bit of a misnomer, the field we have is the "one" side
